@@ -16,7 +16,8 @@ class Linear_QNet():
         x1 = Dense(hidden_size, activation="relu")(state_input)
 
         grid_input = Input(shape=grid_size, name='x2_input')
-        x2 = Conv2D(16, 3, padding='valid', strides=1, activation='relu')(grid_input)
+        x2 = Conv2D(16, 3, padding='valid', strides=1,
+                    activation='relu')(grid_input)
         x2 = Conv2D(32, 3, padding='same', strides=2, activation='relu')(x2)
         x2 = Conv2D(64, 3, padding='same', strides=2, activation='relu')(x2)
         x2 = Flatten()(x2)
@@ -84,7 +85,7 @@ class QTrainer:
         done = np.array(done)
         # (n, x)
 
-        if len(state0.shape) == 1:
+        if len(state1.shape) == 1:
             # (1, x)
             state0 = np.expand_dims(state0, axis=0)
             state1 = np.expand_dims(state1, axis=0)
@@ -107,7 +108,8 @@ class QTrainer:
 
         hist = self.model.model.fit(state1, target, verbose=0)
 
-        print(f"Accuracy: {hist.history['accuracy'][0]:0.6f} Loss:{hist.history['loss'][0]:0.6f}")
+        print(
+            f"Accuracy: {hist.history['accuracy'][0]:0.6f} Loss:{hist.history['loss'][0]:0.6f}")
 
         # current_q = self._current_predict(input_states)
         # next_q = self._target_predict(next_input_states)

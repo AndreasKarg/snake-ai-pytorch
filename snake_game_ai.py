@@ -13,7 +13,8 @@ def train(model_name, headless, reload=None):
     record = 0
     agent = Agent(reload)
     game = SnakeGameAI()
-    number_of_steps = 0
+    total_number_of_steps = 0
+    number_of_steps_in_this_game = 0
 
     while True:
         # get old state
@@ -37,7 +38,8 @@ def train(model_name, headless, reload=None):
         # remember
         agent.remember(state_old, final_move, reward, state_new, done)
 
-        number_of_steps = number_of_steps + 1
+        total_number_of_steps += 1
+        number_of_steps_in_this_game += 1
 
         if done:
             # train long memory, plot result
@@ -47,27 +49,27 @@ def train(model_name, headless, reload=None):
             if agent.epsilon > 0:
                 agent.epsilon -= 1
 
-            agent.train_long_memory(number_of_steps)
+            agent.train_long_memory(number_of_steps_in_this_game)
 
             if score > record:
                 record = score
                 agent.model.save(model_name)
 
-            if agent.n_games % 100 ==0:
-                agent.model.save('reg_'+ model_name)
+            if agent.n_games % 100 == 0:
+                agent.model.save('reg_' + model_name)
 
             total_score += score
             mean_score = total_score / agent.n_games
 
             print(
-                f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.1f}')
+                f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.1f}, Total # of steps: {total_number_of_steps}')
 
             if not headless:
                 plot_scores.append(score)
                 plot_mean_scores.append(mean_score)
                 plot(plot_scores, plot_mean_scores)
 
-            number_of_steps = 0
+            number_of_steps_in_this_game = 0
 
 
 def demo(filename, headless=False):

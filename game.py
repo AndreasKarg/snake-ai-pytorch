@@ -47,19 +47,26 @@ class SnakeGameAI:
         self.head = Point(self.w/2, self.h/2)
         self.snake = [self.head,
                       Point(self.head.x-BLOCK_SIZE, self.head.y),
-                      Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]
+                      Point(self.head.x-(2*BLOCK_SIZE), self.head.y),
+                      Point(self.head.x-(3*BLOCK_SIZE), self.head.y),
+                      Point(self.head.x-(4*BLOCK_SIZE), self.head.y)]
 
         self.score = 0
-        self.food = None
-        self._place_food()
+        self.food = []
+        self.turning_penalty = 0
+
+        for _ in range(20):
+            self._place_food()
         self.frame_iteration = 0
 
     def _place_food(self):
-        x = random.randint(0, (self.w-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
-        y = random.randint(0, (self.h-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
-        self.food = Point(x, y)
-        if self.food in self.snake:
-            self._place_food()
+        while True:
+            x = random.randint(0, (self.w-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
+            y = random.randint(0, (self.h-BLOCK_SIZE)//BLOCK_SIZE)*BLOCK_SIZE
+            food = Point(x, y)
+            if not food in self.snake:
+                self.food.append(food)
+                break
 
     def play_step(self, action, headless):
         self.frame_iteration += 1
@@ -75,7 +82,11 @@ class SnakeGameAI:
 
         reward = 0
         if not np.array_equal(action, [1, 0, 0]):
-            reward = -1 #small penalty for making a turn
+            if self.turning_penalty < 20:
+                self.turning_penalty += 1
+        else:
+            self.turning_penalty = 0
+        reward = -self.turning_penalty  # small penalty for making a turn
 
         # 3. check if game over
         game_over = False
@@ -84,14 +95,15 @@ class SnakeGameAI:
             reward = -30
             return reward, game_over, self.score
 
-        if self.frame_iteration > 100*len(self.snake):
+        if self.frame_iteration > 30*len(self.snake):
             game_over = True
             return reward, game_over, self.score
 
         # 4. place new food or just move
-        if self.head == self.food:
+        if self.head in self.food:
+            self.food.remove(self.head)
             self.score += 1
-            reward = 20
+            reward = 30
             self._place_food()
         else:
             self.snake.pop()
@@ -131,8 +143,9 @@ class SnakeGameAI:
             pygame.draw.rect(self.display, BLUE2,
                              pygame.Rect(pt.x+4, pt.y+4, 12, 12))
 
-        pygame.draw.rect(self.display, RED, pygame.Rect(
-            self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
+        for food in self.food:
+            pygame.draw.rect(self.display, RED, pygame.Rect(
+                food.x, food.y, BLOCK_SIZE, BLOCK_SIZE))
 
         text = font.render("Score: " + str(self.score), True, WHITE)
         self.display.blit(text, [0, 0])
