@@ -21,11 +21,11 @@ def train(model_name, headless, reload=None):
         state_old = agent.get_state(game)
 
         # get move
-        final_move = agent.get_action(state_old)
+        final_move, slime_grid = agent.get_action(state_old)
 
         # perform move and get new state
 
-        reward, done, score = game.play_step(final_move, headless)
+        reward, done, score = game.play_step(final_move, headless, slime_grid)
 
         state_new = agent.get_state(game)
 
@@ -44,10 +44,12 @@ def train(model_name, headless, reload=None):
         if done:
             # train long memory, plot result
             game.reset()
+            agent.reset()
             agent.n_games += 1
 
             if agent.epsilon > 0:
                 agent.epsilon -= 1
+            # print(f"New epsilon: {agent.epsilon}")
 
             agent.train_long_memory(number_of_steps_in_this_game)
 
@@ -62,7 +64,7 @@ def train(model_name, headless, reload=None):
             mean_score = total_score / agent.n_games
 
             print(
-                f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.1f}, Total # of steps: {total_number_of_steps}')
+                f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.2f}, Total # of steps: {total_number_of_steps}')
 
             if not headless:
                 plot_scores.append(score)
@@ -87,14 +89,15 @@ def demo(filename, headless=False):
         state_old = agent.get_state(game)
 
         # get move
-        final_move = agent.get_action(state_old)
+        final_move, slime_grid = agent.get_action(state_old)
 
         # perform move and get new state
-        reward, done, score = game.play_step(final_move, headless)
+        reward, done, score = game.play_step(final_move, headless, slime_grid)
 
         if done:
             # train long memory, plot result
             game.reset()
+            agent.reset()
             agent.n_games += 1
 
             if score > record:

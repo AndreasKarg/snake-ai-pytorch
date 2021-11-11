@@ -18,6 +18,7 @@ class TurnDirection(Enum):
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.003
+CELL_SIZE = 20
 
 
 class Agent:
@@ -28,13 +29,21 @@ class Agent:
         self.epsilon = 300  # randomness
         self.gamma = 0.9  # discount rate
         self.memory = deque(maxlen=MAX_MEMORY)  # popleft()
-        self.model = Linear_QNet(11, 256, (640//20, 480//20, 2), 3, lr=LR)
+        self.model = Linear_QNet(11, 256, (640//20, 480//20, 3), 3, lr=LR)
         self.trainer = QTrainer(self.model, gamma=self.gamma)
+
+        self.width = 640 // CELL_SIZE  # TODO: Make this less insane!
+        self.height = 480 // CELL_SIZE
 
         if reload:
             print("Loaded")
             self.model.load(reload)
-            # self.epsilon = 5
+            self.epsilon = 5
+
+        self.reset()
+
+    def reset(self):
+        self.slime_grid = np.zeros((self.width, self.height))
 
     def _get_danger(self, game, turn_direction: TurnDirection):
         LOOK_AHEAD = 5
@@ -149,19 +158,21 @@ class Agent:
         return state
 
     def get_game_grid(self, game):
-        CELL_SIZE = 20
         SNAKE_HEAD = 1
         SNAKE_BODY = 2
         APPLE = 1
 
-        width = game.w // CELL_SIZE
-        height = game.h // CELL_SIZE
-        grid = np.zeros((width, height, 2))
+        self.slime_grid *= 0.95
+
+        grid = np.zeros((self.width, self.height, 3))
         for lengthways_pos, pt in enumerate(game.snake):
             x = int(pt.x)//CELL_SIZE
             y = int(pt.y)//CELL_SIZE
-            if x > 0 and y > 0 and x < width and y < height:
+            if x > 0 and y > 0 and x < self.width and y < self.height:
                 grid[x, y, 0] = SNAKE_HEAD + (lengthways_pos/len(game.snake))
+                self.slime_grid[x, y] = 1
+
+        grid[..., 2] = self.slime_grid
 
         # head = game.snake[0]
         # x = int(head.x)//CELL_SIZE
@@ -202,7 +213,7 @@ class Agent:
         #self.epsilon = 80 - self.n_games
         final_move = [0, 0, 0]
         if random.randint(0, 300) < self.epsilon:
-            move = random.randint(0, 3) % 2
+            move = random.randint(0, 3) % 3
             final_move[move] = 1
         else:
             state0 = np.array(state[0], dtype=np.float)[np.newaxis, ...]
@@ -211,4 +222,4 @@ class Agent:
             move = np.argmax(prediction, axis=1)[0]
             final_move[move] = 1
 
-        return final_move
+        return final_move, self.slime_grid

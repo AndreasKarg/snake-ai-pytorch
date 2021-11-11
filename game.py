@@ -24,6 +24,7 @@ RED = (200, 0, 0)
 BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
+OLIVE = np.array([85, 127, 37])
 
 BLOCK_SIZE = 20
 SPEED = 30
@@ -68,7 +69,7 @@ class SnakeGameAI:
                 self.food.append(food)
                 break
 
-    def play_step(self, action, headless):
+    def play_step(self, action, headless, slime_grid):
         self.frame_iteration += 1
         # 1. collect user input
         for event in pygame.event.get():
@@ -92,14 +93,20 @@ class SnakeGameAI:
         game_over = False
         if self.is_collision():
             game_over = True
-            reward = -30
+            reward = -60
             return reward, game_over, self.score
 
         if self.frame_iteration > 30*len(self.snake):
             game_over = True
             return reward, game_over, self.score
 
-        # 4. place new food or just move
+        # 4. Penalise where snake has been recently
+        slime_trail_penalty = 5 * \
+            slime_grid[int(self.head.x // BLOCK_SIZE),
+                       int(self.head.y // BLOCK_SIZE)]
+        reward -= slime_trail_penalty
+
+        # 5. place new food or just move
         if self.head in self.food:
             self.food.remove(self.head)
             self.score += 1
@@ -108,12 +115,12 @@ class SnakeGameAI:
         else:
             self.snake.pop()
 
-        # 5. update ui and clock
+        # 6. update ui and clock
         if not headless:
-            self._update_ui()
+            self._update_ui(slime_grid)
             self.clock.tick(SPEED)
 
-        # 6. return game over and score
+        # 7. return game over and score
         return reward, game_over, self.score
 
     def is_snake_collision(self, pt=None):
@@ -134,8 +141,14 @@ class SnakeGameAI:
         # hits itself
         return self.is_snake_collision(pt)
 
-    def _update_ui(self):
+    def _update_ui(self, slime_grid):
         self.display.fill(BLACK)
+
+        for y in range(24):
+            for x in range(32):
+                slimeyness = slime_grid[x, y]
+                pygame.draw.rect(self.display, OLIVE*slimeyness,
+                                 pygame.Rect(x*20, y*20, BLOCK_SIZE, BLOCK_SIZE))
 
         for pt in self.snake:
             pygame.draw.rect(self.display, BLUE1, pygame.Rect(
