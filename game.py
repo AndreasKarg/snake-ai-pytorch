@@ -101,10 +101,10 @@ class SnakeGameAI:
             return reward, game_over, self.score
 
         # 4. Penalise where snake has been recently
-        slime_trail_penalty = 5 * \
-            slime_grid[int(self.head.x // BLOCK_SIZE),
-                       int(self.head.y // BLOCK_SIZE)]
-        reward -= slime_trail_penalty
+        # slime_trail_penalty = 5 * \
+        #     slime_grid[int(self.head.x // BLOCK_SIZE),
+        #                int(self.head.y // BLOCK_SIZE)]
+        # reward -= slime_trail_penalty
 
         # 5. place new food or just move
         if self.head in self.food:
