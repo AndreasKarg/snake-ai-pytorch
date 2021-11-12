@@ -63,12 +63,20 @@ def train(model_name, headless, reload=None):
             total_score += score
             mean_score = total_score / agent.n_games
 
+            plot_scores.append(score)
+            plot_mean_scores.append(mean_score)
+
+            sample_count_for_rolling_mean = min(100, agent.n_games)
+
+            scores_for_rolling_mean = plot_scores[-sample_count_for_rolling_mean:]
+
+            rolling_mean = sum(scores_for_rolling_mean) / \
+                sample_count_for_rolling_mean
+
             print(
-                f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.2f}, Total # of steps: {total_number_of_steps}')
+                f'Game {agent.n_games}, Score {score}, Record: {record}, Average: {mean_score:.2f}, Rolling Average: {rolling_mean:.2f}, Total # of steps: {total_number_of_steps}')
 
             if not headless:
-                plot_scores.append(score)
-                plot_mean_scores.append(mean_score)
                 plot(plot_scores, plot_mean_scores)
 
             number_of_steps_in_this_game = 0

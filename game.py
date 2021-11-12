@@ -56,7 +56,7 @@ class SnakeGameAI:
         self.food = []
         self.turning_penalty = 0
 
-        for _ in range(20):
+        for _ in range(5):
             self._place_food()
         self.frame_iteration = 0
 
@@ -82,12 +82,12 @@ class SnakeGameAI:
         self.snake.insert(0, self.head)
 
         reward = 0
-        if not np.array_equal(action, [1, 0, 0]):
-            if self.turning_penalty < 20:
-                self.turning_penalty += 1
-        else:
-            self.turning_penalty = 0
-        reward = -self.turning_penalty  # small penalty for making a turn
+        # if not np.array_equal(action, [1, 0, 0]):
+        #     if self.turning_penalty < 20:
+        #         self.turning_penalty += 1
+        # else:
+        #     self.turning_penalty = 0
+        # reward = -self.turning_penalty  # small penalty for making a turn
 
         # 3. check if game over
         game_over = False
@@ -110,7 +110,7 @@ class SnakeGameAI:
         if self.head in self.food:
             self.food.remove(self.head)
             self.score += 1
-            reward = 30
+            reward = 60
             self._place_food()
         else:
             self.snake.pop()
