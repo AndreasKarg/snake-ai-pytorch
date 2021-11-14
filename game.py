@@ -56,7 +56,7 @@ class SnakeGameAI:
         self.food = []
         self.turning_penalty = 0
 
-        for _ in range(5):
+        for _ in range(20):
             self._place_food()
         self.frame_iteration = 0
 

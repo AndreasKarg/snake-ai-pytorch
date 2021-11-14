@@ -19,10 +19,11 @@ class Linear_QNet():
         x2 = Conv2D(16, 3, padding='valid', strides=1,
                     activation='relu')(grid_input)
         x2 = Conv2D(32, 3, padding='same', strides=2, activation='relu')(x2)
-        x2 = Conv2D(64, 3, padding='same', strides=2, activation='relu')(x2)
         x2 = Flatten()(x2)
+        x2 = Dense(hidden_size, activation='relu')(x2)
+        x2 = Dense(hidden_size, activation='relu')(x2)
 
-        # combined = Concatenate()([x1,x2])
+        # combined = Concatenate()([grid_input, x2])
 
         output = Dense(output_size, activation='linear')(x2)
 
